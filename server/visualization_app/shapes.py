@@ -1,3 +1,7 @@
+"""
+Shapes module delivers rectangle/cuboid classes which
+are used in creation of svg file
+"""
 import matplotlib.patches as patches
 import numpy as np
 
@@ -28,7 +32,7 @@ class Rectangle:
 
     @property
     def x_edge(self):
-        """Calculates horizontal (left-bottom point of shape) point"""
+        """Calculates horizontal (left-bottom point of shape)"""
         return self.x1 if self.x2 > self.x1 else self.x2
 
     @property
