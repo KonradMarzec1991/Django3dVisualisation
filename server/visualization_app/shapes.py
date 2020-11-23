@@ -65,6 +65,7 @@ class Rectangle:
         return self.shape
 
 
+# pylint: disable=too-many-arguments
 class Cuboid(Rectangle):
     """
     Base class for 3d visualization
@@ -118,6 +119,7 @@ class Cuboid(Rectangle):
         ]
         return np.array(x_coord), np.array(y_coord), np.array(z_coord)
 
+    # pylint: disable=arguments-differ
     def draw(self, ax=None):
         """Attaches to axis object cuboid object"""
         if ax is not None:
