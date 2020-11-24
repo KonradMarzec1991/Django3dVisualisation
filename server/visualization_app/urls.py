@@ -8,9 +8,9 @@ from .views import VisualizationViewsSet
 router = routers.SimpleRouter()
 
 router.register(
-    prefix=r'visualize',
+    prefix=r'projection',
     viewset=VisualizationViewsSet,
-    basename='visualize'
+    basename='projection'
 )
 
 urlpatterns = router.urls

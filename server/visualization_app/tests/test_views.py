@@ -3,7 +3,7 @@ from rest_framework.test import APIClient
 
 class TestVisualizationViewsSet:
 
-    PATH = '/api/visualize/'
+    PATH = '/api/projection/'
 
     def test_status(self, correct_geo_input):
         client = APIClient()
