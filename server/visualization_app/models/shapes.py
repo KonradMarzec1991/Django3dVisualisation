@@ -122,7 +122,7 @@ class Cuboid(Rectangle):
     # pylint: disable=arguments-differ
     def draw(self, ax=None):
         """Attaches to axis object cuboid object"""
-        if ax is not None:
+        if ax:
             x, y, z = self.cuboid_data()
             ax.plot_surface(
                 x, y, z,
@@ -131,4 +131,3 @@ class Cuboid(Rectangle):
                 color=Rectangle.FACE_COLOR,
                 edgecolor=Rectangle.COLOR
             )
-        return AttributeError('Axis object cannot be None')

@@ -7,13 +7,13 @@ from uuid import uuid4
 import matplotlib.pyplot as plt
 from django.conf import settings
 
-from visualization_app.shapes import (
+from visualization_app.models.shapes import (
     Rectangle,
     Cuboid
 )
 
 
-class DataVisualize:
+class Geometry:
     """
     Delivers class which depending on type of
     visualization (2d/3d) transforms input geometry
@@ -30,8 +30,6 @@ class DataVisualize:
         elif self.vis_type == 'XYZ':
             self.ax = self.create_3d_plot()
             self.transform = self.visualize_3d
-        else:
-            raise AttributeError('Plane attr might be either XY or XYZ')
 
     @staticmethod
     def generate_path():

@@ -6,9 +6,11 @@ from rest_framework import routers
 from .views import VisualizationViewsSet
 
 router = routers.SimpleRouter()
+
 router.register(
     prefix=r'visualize',
     viewset=VisualizationViewsSet,
     basename='visualize'
 )
+
 urlpatterns = router.urls
