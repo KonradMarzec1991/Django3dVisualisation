@@ -5,6 +5,7 @@ import os
 from uuid import uuid4
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from django.conf import settings
 
 from visualization_app.models.shapes import (
@@ -24,33 +25,43 @@ class Geometry:
         self.vis_type = self.input_values['plane']
         self.figure = plt.figure()
 
+        self.ax = self.create_plot()
+
         if self.vis_type == 'XY':
-            self.ax = self.create_2d_plot()
-            self.transform = self.visualize_2d
+            self.transform = self.visualize_xy
         elif self.vis_type == 'XYZ':
-            self.ax = self.create_3d_plot()
-            self.transform = self.visualize_3d
+            self.transform = self.visualize_xyz
+        else:
+            self.transform = self.visualize_xz_or_yz
 
     @staticmethod
     def generate_path():
         """Creates path for temporary file"""
         return os.path.join(settings.UPLOADS_PATH, f'{uuid4()}.svg')
 
-    def create_2d_plot(self):
-        """Create plot for 2d visualization"""
-        ax = self.figure.add_subplot(111)
+    @staticmethod
+    def create_3d_collection(rectangle):
+        return Poly3DCollection(
+            rectangle,
+            edgecolors='black',
+            facecolors='#e0e0d1'
+        )
+
+    def create_plot(self):
+        """Create appropriate plot for visualization"""
+        if self.vis_type == 'XY':
+            ax = self.figure.add_subplot(111)
+        elif self.vis_type == 'XYZ':
+            ax = self.figure.gca(projection='3d')
+            ax.set_aspect('auto')
+        else:
+            ax = self.figure.add_subplot(111, projection='3d')
+
         ax.grid(False)  # do not show grids
         return ax
 
-    def create_3d_plot(self):
-        """Create plot for 3d visualization"""
-        ax = self.figure.gca(projection='3d')
-        ax.set_aspect('auto')
-        ax.grid(False)
-        return ax
-
     # pylint: disable=too-many-locals
-    def visualize_2d(self):
+    def visualize_xy(self):
         """
         Loops geometry coordinates and add to ax
         object next instances of Rectangle and visualize
@@ -76,7 +87,67 @@ class Geometry:
         plt.savefig(filename, transparent=True)
         return filename
 
-    def visualize_3d(self):
+    def visualize_xz_or_yz(self):
+        dims = self.input_values['geometry']
+
+        x_start = dims[0]['x1']
+        y_start = dims[0]['y1']
+        z_start = dims[0]['z1']
+
+        min_x, max_x = x_start, x_start
+        min_y, max_y = y_start, y_start
+        min_z, max_z = z_start, z_start
+
+        if self.vis_type == 'YZ':
+            for dim in dims:
+                x1, _, y1, y2, z1, z2 = tuple(dim.values())
+
+                y, z = abs(y1 - y2), abs(z1 - z2)
+                edge_y, edge_z = min(y1, y2), min(z1, z2)
+
+                min_x, max_x = min(min_x, x1), max(max_x, x1)
+                min_y, max_y = min(min_y, y1, y2), max(max_y, y1, y2)
+                min_z, max_z = min(min_z, z1, z2), max(min_z, z1, z2)
+
+                rectangle = [[
+                    [x1, edge_y, edge_z],
+                    [x1, edge_y, edge_z + z],
+                    [x1, edge_y + y, edge_z + z],
+                    [x1, edge_y + y, edge_z]
+                ]]
+                self.ax.add_collection3d(self.create_3d_collection(rectangle))
+
+        elif self.vis_type == 'XZ':
+            for dim in dims:
+                x1, x2, y1, _, z1, z2 = tuple(dim.values())
+
+                x, z = abs(x1 - x2), abs(z1 - z2)
+                edge_x, edge_z = min(x1, x2), min(z1, z2)
+
+                min_x, max_x = min(min_x, x1, x2), max(max_x, x1, x2)
+                min_y, max_y = min(min_y, y1), max(max_y, y1)
+                min_z, max_z = min(min_z, z1, z2), max(min_z, z1, z2)
+
+                rectangle = [[
+                    [edge_x, y1, edge_z],
+                    [edge_x, y1, edge_z + z],
+                    [edge_x + x, y1, edge_z + z],
+                    [edge_x + x, y1, edge_z]
+                ]]
+                self.ax.add_collection3d(self.create_3d_collection(rectangle))
+
+        self.ax.set_xlabel('X')
+        self.ax.set_xlim(1.1 * min_x, 1.1 * max_x)
+        self.ax.set_ylabel('Y')
+        self.ax.set_ylim(1.1 * min_y, 1.1 * max_y)
+        self.ax.set_zlabel('Z')
+        self.ax.set_zlim(1.1 * min_z, 1.1 * max_z)
+
+        filename = self.generate_path()
+        plt.savefig(filename, transparent=True)
+        return filename
+
+    def visualize_xyz(self):
         """
         Loops geometry coordinates and add to ax
         object next instances of Cuboid and visualize

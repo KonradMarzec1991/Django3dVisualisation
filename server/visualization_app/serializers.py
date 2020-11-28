@@ -19,7 +19,7 @@ class GeometryInputSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Values are not in (`geometry` and `plane`)'
             )
-        if data['plane'] not in ('XY', 'XYZ'):
+        if data['plane'] not in ('XY', 'XZ', 'YZ', 'XYZ'):
             raise serializers.ValidationError(
                 '`plane` attribute must be 2d (XY) or 3d (XYZ)'
             )
@@ -27,7 +27,7 @@ class GeometryInputSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 '`geometry` attribute must be of type list'
             )
-        if not all(len(dim) in (4, 6) for dim in data['geometry']):
+        if not all(len(dim) in range(4, 7) for dim in data['geometry']):
             raise serializers.ValidationError(
                 '`geometry` attribute must contain 4 or 6 dimensions'
             )

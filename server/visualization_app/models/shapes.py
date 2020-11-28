@@ -33,12 +33,12 @@ class Rectangle:
     @property
     def x_edge(self):
         """Calculates horizontal (left-bottom point of shape)"""
-        return self.x1 if self.x2 > self.x1 else self.x2
+        return min(self.x1, self.x2)
 
     @property
     def y_edge(self):
         """Calculates edge_y (left-bottom point of shape)"""
-        return self.y1 if self.y2 > self.y1 else self.y2
+        return min(self.y1, self.y2)
 
     def draw(self):
         """
@@ -50,7 +50,6 @@ class Rectangle:
             width=self.x_dim,
             height=self.y_dim
         )
-
         return rectangle
 
     def get_figure(self):
@@ -83,7 +82,7 @@ class Cuboid(Rectangle):
     @property
     def z_edge(self):
         """Calculates cuboid down (left-bottom-down point of shape) point"""
-        return self.z1 if self.z2 > self.z1 else self.z2
+        return min(self.z1, self.z2)
 
     @property
     def dims(self):
@@ -98,24 +97,19 @@ class Cuboid(Rectangle):
     def cuboid_data(self):
         """Calculates coordinates of all points for cuboid object"""
         l, w, h = self.dims
-        pos = self.edges
-        x_coord = [
-            [pos[0], pos[0] + l, pos[0] + l, pos[0], pos[0]],
-            [pos[0], pos[0] + l, pos[0] + l, pos[0], pos[0]],
-            [pos[0], pos[0] + l, pos[0] + l, pos[0], pos[0]],
-            [pos[0], pos[0] + l, pos[0] + l, pos[0], pos[0]]
-        ]
+        x, y, z = self.edges
+        x_coord = [[x, x + l, x + l, x, x]] * 4
         y_coord = [
-            [pos[1], pos[1], pos[1] + w, pos[1] + w, pos[1]],
-            [pos[1], pos[1], pos[1] + w, pos[1] + w, pos[1]],
-            [pos[1], pos[1], pos[1], pos[1], pos[1]],
-            [pos[1] + w, pos[1] + w, pos[1] + w, pos[1] + w, pos[1] + w]
+            [y, y, y + w, y + w, y],
+            [y, y, y + w, y + w, y],
+            [y, y, y, y, y],
+            [y + w, y + w, y + w, y + w, y + w]
         ]
         z_coord = [
-            [pos[2], pos[2], pos[2], pos[2], pos[2]],
-            [pos[2] + h, pos[2] + h, pos[2] + h, pos[2] + h, pos[2] + h],
-            [pos[2], pos[2], pos[2] + h, pos[2] + h, pos[2]],
-            [pos[2], pos[2], pos[2] + h, pos[2] + h, pos[2]]
+            [z, z, z, z, z],
+            [z + h, z + h, z + h, z + h, z + h],
+            [z, z, z + h, z + h, z],
+            [z, z, z + h, z + h, z]
         ]
         return np.array(x_coord), np.array(y_coord), np.array(z_coord)
 

@@ -21,13 +21,8 @@ class VisualizationViewsSet(ViewSet):
         """
         serializer = GeometryInputSerializer(data=request.data)
         if serializer.is_valid():
-
             geo = Geometry(request.data)
-            if geo.input_values['plane'] == 'XY':
-                path = geo.visualize_2d()
-            else:
-                path = geo.visualize_3d()
-
+            path = geo.transform()
             name = path.split('/')[-1]
 
             with open(path, 'rb') as file:
