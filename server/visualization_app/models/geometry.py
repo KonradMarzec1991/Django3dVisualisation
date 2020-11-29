@@ -34,10 +34,11 @@ class Geometry:
 
     @staticmethod
     def create_3d_collection(rect):
+        """Creates plot-like object"""
         return Poly3DCollection(rect, edgecolors='black', facecolors='#e0e0d1')
 
     def create_plot(self):
-        """Create appropriate plot for visualization"""
+        """Creates appropriate plot for visualization"""
         if self.vis_type == 'XY':
             ax = self.figure.add_subplot(111)
         elif self.vis_type == 'XYZ':

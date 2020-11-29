@@ -1,40 +1,31 @@
+# pylint: disable=abstract-method
 """
-General Serializers module
+General serializers module
 """
 from rest_framework import serializers
 
 
-# pylint: disable=abstract-method
+class DimensionSerializer(serializers.Serializer):
+    """
+    DimensionSerializer validates necessary coordinate values
+    """
+    x1 = serializers.IntegerField()
+    x2 = serializers.IntegerField()
+    y1 = serializers.IntegerField()
+    y2 = serializers.IntegerField()
+    z1 = serializers.IntegerField()
+    z2 = serializers.IntegerField()
+
+
 class GeometryInputSerializer(serializers.Serializer):
     """
-    This serializer checks request.data input
+    This serializer validates user input(geometry and plane)
     """
-    def validate_input(self):
-        data = self.initial_data
-        if len(data) != 2:
-            raise serializers.ValidationError(
-                'Dictionary contains exactly two values: `geometry` and `plane`'
-            )
-        if not ('geometry' in data and 'plane' in data):
-            raise serializers.ValidationError(
-                'Values are not in (`geometry` and `plane`)'
-            )
-        if data['plane'] not in ('XY', 'XZ', 'YZ', 'XYZ'):
-            raise serializers.ValidationError(
-                '`plane` attribute must be 2d (XY) or 3d (XYZ)'
-            )
-        if not isinstance(data['geometry'], list):
-            raise serializers.ValidationError(
-                '`geometry` attribute must be of type list'
-            )
-        if not all(len(dim) in range(4, 7) for dim in data['geometry']):
-            raise serializers.ValidationError(
-                '`geometry` attribute must contain 4 or 6 dimensions'
-            )
-        return
-
-    def validate(self, attrs):
-        self.validate_input()
-
-        # do other validation...
-        return super().validate(attrs)
+    PLANE_CHOICES = (
+        ('XY', 'XY'),
+        ('XZ', 'XZ'),
+        ('YZ', 'YZ'),
+        ('XYZ', 'XYZ')
+    )
+    geometry = DimensionSerializer(many=True)
+    plane = serializers.ChoiceField(choices=PLANE_CHOICES)

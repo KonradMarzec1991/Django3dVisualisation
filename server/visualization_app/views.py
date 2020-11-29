@@ -22,9 +22,9 @@ class VisualizationViewsSet(ViewSet):
             geo = Geometry(request.data)
             svg_io = geo.transform()
             file = svg_io.getvalue()
+
             response = HttpResponse(file, content_type='image/svg+xml')
             response['Content-Length'] = len(response.content)
-            response['Content-Disposition'] = f'attachment; filename=projection'
+            response['Content-Disposition'] = 'attachment; filename=projection'
             return response
-        else:
-            return Response(serializer.errors, status=404)
+        return Response(serializer.errors, status=404)
