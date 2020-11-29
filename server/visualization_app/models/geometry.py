@@ -41,12 +41,13 @@ class Geometry:
         """Creates appropriate plot for visualization"""
         if self.vis_type == 'XY':
             ax = self.figure.add_subplot(111)
+            ax.grid(True)
         elif self.vis_type == 'XYZ':
             ax = self.figure.gca(projection='3d')
             ax.set_aspect('auto')
+            ax.grid(False)  # do not show grids
         else:
             ax = self.figure.add_subplot(111, projection='3d')
-        ax.grid(False)  # do not show grids
         return ax
 
     # pylint: disable=too-many-locals
@@ -100,7 +101,7 @@ class Geometry:
 
                 min_x, max_x = min(min_x, x1), max(max_x, x1)
                 min_y, max_y = min(min_y, y1, y2), max(max_y, y1, y2)
-                min_z, max_z = min(min_z, z1, z2), max(min_z, z1, z2)
+                min_z, max_z = min(min_z, z1, z2), max(max_z, z1, z2)
 
                 rectangle = [[
                     [x1, edge_y, edge_z],
@@ -119,7 +120,7 @@ class Geometry:
 
                 min_x, max_x = min(min_x, x1, x2), max(max_x, x1, x2)
                 min_y, max_y = min(min_y, y1), max(max_y, y1)
-                min_z, max_z = min(min_z, z1, z2), max(min_z, z1, z2)
+                min_z, max_z = min(min_z, z1, z2), max(max_z, z1, z2)
 
                 rectangle = [[
                     [edge_x, y1, edge_z],
@@ -128,6 +129,10 @@ class Geometry:
                     [edge_x + x, y1, edge_z]
                 ]]
                 self.ax.add_collection3d(self.create_3d_collection(rectangle))
+
+        print(min_x, max_x)
+        print(min_y, max_y)
+        print(min_z, max_z)
 
         self.ax.set_xlim(1.1 * min_x, 1.1 * max_x)
         self.ax.set_ylim(1.1 * min_y, 1.1 * max_y)
@@ -146,7 +151,6 @@ class Geometry:
         for dim in dims:
             cuboid = Cuboid(*tuple(dim.values()))
             cuboid.draw(ax=self.ax)
-
         svg_io = io.BytesIO()
         plt.savefig(svg_io, format='svg', transparent=True)
         return svg_io
