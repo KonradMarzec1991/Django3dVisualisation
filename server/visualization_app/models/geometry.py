@@ -1,12 +1,10 @@
 """
 Module delivers transformation classes for 2d/3d visualization
 """
-import os
-from uuid import uuid4
+import io
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from django.conf import settings
 
 from visualization_app.models.shapes import (
     Rectangle,
@@ -35,17 +33,8 @@ class Geometry:
             self.transform = self.visualize_xz_or_yz
 
     @staticmethod
-    def generate_path():
-        """Creates path for temporary file"""
-        return os.path.join(settings.UPLOADS_PATH, f'{uuid4()}.svg')
-
-    @staticmethod
-    def create_3d_collection(rectangle):
-        return Poly3DCollection(
-            rectangle,
-            edgecolors='black',
-            facecolors='#e0e0d1'
-        )
+    def create_3d_collection(rect):
+        return Poly3DCollection(rect, edgecolors='black', facecolors='#e0e0d1')
 
     def create_plot(self):
         """Create appropriate plot for visualization"""
@@ -56,7 +45,6 @@ class Geometry:
             ax.set_aspect('auto')
         else:
             ax = self.figure.add_subplot(111, projection='3d')
-
         ax.grid(False)  # do not show grids
         return ax
 
@@ -80,14 +68,18 @@ class Geometry:
 
             rectangle = Rectangle(x1, x2, y1, y2)
             self.ax.add_patch(rectangle.get_figure())
+
         plt.xlim(min_x - 50, max_x + 50)
         plt.ylim(min_y - 50, max_y + 50)
 
-        filename = self.generate_path()
-        plt.savefig(filename, transparent=True)
-        return filename
+        svg_io = io.BytesIO()
+        plt.savefig(svg_io, format='svg', transparent=True)
+        return svg_io
 
     def visualize_xz_or_yz(self):
+        """
+        Creates XZ or YZ plots
+        """
         dims = self.input_values['geometry']
 
         x_start = dims[0]['x1']
@@ -136,16 +128,13 @@ class Geometry:
                 ]]
                 self.ax.add_collection3d(self.create_3d_collection(rectangle))
 
-        self.ax.set_xlabel('X')
         self.ax.set_xlim(1.1 * min_x, 1.1 * max_x)
-        self.ax.set_ylabel('Y')
         self.ax.set_ylim(1.1 * min_y, 1.1 * max_y)
-        self.ax.set_zlabel('Z')
         self.ax.set_zlim(1.1 * min_z, 1.1 * max_z)
 
-        filename = self.generate_path()
-        plt.savefig(filename, transparent=True)
-        return filename
+        svg_io = io.BytesIO()
+        plt.savefig(svg_io, format='svg', transparent=True)
+        return svg_io
 
     def visualize_xyz(self):
         """
@@ -157,6 +146,6 @@ class Geometry:
             cuboid = Cuboid(*tuple(dim.values()))
             cuboid.draw(ax=self.ax)
 
-        filename = self.generate_path()
-        plt.savefig(filename, transparent=True)
-        return filename
+        svg_io = io.BytesIO()
+        plt.savefig(svg_io, format='svg', transparent=True)
+        return svg_io

@@ -1,8 +1,6 @@
 """
 General ViewSet module
 """
-from mimetypes import guess_type
-
 from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -22,13 +20,11 @@ class VisualizationViewsSet(ViewSet):
         serializer = GeometryInputSerializer(data=request.data)
         if serializer.is_valid():
             geo = Geometry(request.data)
-            path = geo.transform()
-            name = path.split('/')[-1]
-
-            with open(path, 'rb') as file:
-                response = HttpResponse(file, content_type=guess_type(path)[0])
-                response['Content-Length'] = len(response.content)
-                response['Content-Disposition'] = f'attachment; filename={name}'
-                return response
+            svg_io = geo.transform()
+            file = svg_io.getvalue()
+            response = HttpResponse(file, content_type='image/svg+xml')
+            response['Content-Length'] = len(response.content)
+            response['Content-Disposition'] = f'attachment; filename=projection'
+            return response
         else:
             return Response(serializer.errors, status=404)
