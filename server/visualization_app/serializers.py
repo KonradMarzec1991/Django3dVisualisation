@@ -2,6 +2,8 @@
 """
 General serializers module
 """
+from itertools import permutations
+
 from rest_framework import serializers
 
 
@@ -22,9 +24,7 @@ class GeometryInputSerializer(serializers.Serializer):
     This serializer validates user input(geometry and plane)
     """
     PLANE_CHOICES = (
-        ('XY', 'XY'),
-        ('XZ', 'XZ'),
-        ('YZ', 'YZ'),
+        *((''.join(per), ''.join(per)) for per in permutations('XYZ', 2)),
         ('XYZ', 'XYZ')
     )
     geometry = DimensionSerializer(many=True)

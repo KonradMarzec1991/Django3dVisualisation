@@ -2,9 +2,10 @@
 Module delivers transformation classes for 2d/3d visualization
 """
 import io
+import operator
+from itertools import product
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from visualization_app.models.shapes import (
     Rectangle,
@@ -18,137 +19,100 @@ class Geometry:
     visualization (2d/3d) transforms input geometry
     into matplotlib objects (ready to visualize)
     """
-    def __init__(self, input_values):
-        self.input_values = input_values
-        self.vis_type = self.input_values['plane']
+    def __init__(self, load):
+        self.input_values = load['geometry']
+        self.vis_type = load['plane']
         self.figure = plt.figure()
 
         self.ax = self.create_plot()
-
-        if self.vis_type == 'XY':
-            self.transform = self.visualize_xy
-        elif self.vis_type == 'XYZ':
-            self.transform = self.visualize_xyz
+        if self.vis_type == 'XYZ':
+            self.transform = self.visualize_3d
         else:
-            self.transform = self.visualize_xz_or_yz
-
-    @staticmethod
-    def create_3d_collection(rect):
-        """Creates plot-like object"""
-        return Poly3DCollection(rect, edgecolors='black', facecolors='#e0e0d1')
+            self.transform = self.visualize_2d
 
     def create_plot(self):
-        """Creates appropriate plot for visualization"""
-        if self.vis_type == 'XY':
-            ax = self.figure.add_subplot(111)
-            ax.grid(True)
-        elif self.vis_type == 'XYZ':
+        """Creates appropriate plot settings for visualization"""
+        if self.vis_type == 'XYZ':
             ax = self.figure.gca(projection='3d')
             ax.set_aspect('auto')
             ax.grid(False)  # do not show grids
         else:
-            ax = self.figure.add_subplot(111, projection='3d')
+            ax = self.figure.add_subplot(111)
+            ax.grid(True)
         return ax
 
+    def retrieve_proper_coords(self, coord_values):
+        """
+        Retrieves proper coordination values from input for given orientation
+
+        If orientation equals, for example, ZY, method creates (z1, z2, y1, y2)
+        tuple and fetches data from input (dictionary in loop):
+
+        retrieve_proper_coords({..., "y1": 9, "y2": 191, "z1": 0, "z2": 320}) ->
+        (0, 320, 9, 191)
+
+        :param coord_values: dictionary with x1, x2, ..., z2 values
+        :return: tuple with coordinate values
+        """
+        orientation = self.vis_type.lower()
+        coords = tuple(''.join(var) for var in product(orientation, '12'))
+        return operator.itemgetter(*coords)(coord_values)
+
+    def initialize_axis_parameters(self):
+        """
+        Delivers start values for looking minimum/maximum
+        of coordinate value. Takes into account orientation of object.
+
+        For example, if horizontal orientation of object equals Y,
+        hor_start = input[0]['y1'] etc.
+        """
+        orientation = self.vis_type.lower()
+        horizontal, vertical = tuple(orientation)
+
+        hor_start = self.input_values[0][f'{horizontal}1']
+        ver_start = self.input_values[0][f'{vertical}1']
+        return hor_start, ver_start
+
     # pylint: disable=too-many-locals
-    def visualize_xy(self):
+    def visualize_2d(self):
         """
-        Loops geometry coordinates and add to ax
-        object next instances of Rectangle and visualize
+        Loops geometry coordinates and add to object next instances of Rectangle
+        and saves visualization in memory as svg file
+
+        In next iteration horizontal values (h_min, h_max) and
+        vertical (v_min, v_max) values are updated in order
+        to place visualization in the centre of plot
         """
-        dims = self.input_values['geometry']
-        x_start = dims[0]['x1']
-        y_start = dims[0]['y1']
+        margin = 50
+        hor_start, ver_start = self.initialize_axis_parameters()
+        h_min, h_max = hor_start, hor_start
+        v_min, v_max = ver_start, ver_start
 
-        # calculate maximum values for coordinates to set picture in the middle
-        min_x, max_x = x_start, x_start
-        min_y, max_y = y_start, y_start
-        for dim in dims:
-            x1, x2, y1, y2, *_ = tuple(dim.values())
-            min_x, max_x = min(min_x, x1, x2), max(max_x, x1, x2)
-            min_y, max_y = min(min_y, y1, y2), max(max_y, y1, y2)
+        for dim in self.input_values:
+            hor_1, hor_2, ver_1, ver_2 = self.retrieve_proper_coords(dim)
 
-            rectangle = Rectangle(x1, x2, y1, y2)
+            h_min, h_max = min(h_min, hor_1, hor_2), max(h_max, hor_1, hor_2)
+            v_min, v_max = min(v_min, ver_1, ver_2), max(v_max, ver_1, ver_2)
+
+            rectangle = Rectangle(hor_1, hor_2, ver_1, ver_2)
             self.ax.add_patch(rectangle.get_figure())
 
-        plt.xlim(min_x - 50, max_x + 50)
-        plt.ylim(min_y - 50, max_y + 50)
+        plt.xlim(h_min - margin, h_max + margin)
+        plt.ylim(v_min - margin, v_max + margin)
+        plt.xlabel(self.vis_type[0])  # get first letter of orientation
+        plt.ylabel(self.vis_type[1])  # get second letter of orientation
 
         svg_io = io.BytesIO()
         plt.savefig(svg_io, format='svg', transparent=True)
         return svg_io
 
-    def visualize_xz_or_yz(self):
+    def visualize_3d(self):
         """
-        Creates XZ or YZ plots
+        Loops geometry coordinates and add to ax object
+        next instances of Cuboid and saves visualization
+        in memory as svg file
         """
-        dims = self.input_values['geometry']
-
-        x_start = dims[0]['x1']
-        y_start = dims[0]['y1']
-        z_start = dims[0]['z1']
-
-        min_x, max_x = x_start, x_start
-        min_y, max_y = y_start, y_start
-        min_z, max_z = z_start, z_start
-
-        if self.vis_type == 'YZ':
-            for dim in dims:
-                x1, _, y1, y2, z1, z2 = tuple(dim.values())
-
-                y, z = abs(y1 - y2), abs(z1 - z2)
-                edge_y, edge_z = min(y1, y2), min(z1, z2)
-
-                min_x, max_x = min(min_x, x1), max(max_x, x1)
-                min_y, max_y = min(min_y, y1, y2), max(max_y, y1, y2)
-                min_z, max_z = min(min_z, z1, z2), max(max_z, z1, z2)
-
-                rectangle = [[
-                    [x1, edge_y, edge_z],
-                    [x1, edge_y, edge_z + z],
-                    [x1, edge_y + y, edge_z + z],
-                    [x1, edge_y + y, edge_z]
-                ]]
-                self.ax.add_collection3d(self.create_3d_collection(rectangle))
-
-        elif self.vis_type == 'XZ':
-            for dim in dims:
-                x1, x2, y1, _, z1, z2 = tuple(dim.values())
-
-                x, z = abs(x1 - x2), abs(z1 - z2)
-                edge_x, edge_z = min(x1, x2), min(z1, z2)
-
-                min_x, max_x = min(min_x, x1, x2), max(max_x, x1, x2)
-                min_y, max_y = min(min_y, y1), max(max_y, y1)
-                min_z, max_z = min(min_z, z1, z2), max(max_z, z1, z2)
-
-                rectangle = [[
-                    [edge_x, y1, edge_z],
-                    [edge_x, y1, edge_z + z],
-                    [edge_x + x, y1, edge_z + z],
-                    [edge_x + x, y1, edge_z]
-                ]]
-                self.ax.add_collection3d(self.create_3d_collection(rectangle))
-
-        print(min_x, max_x)
-        print(min_y, max_y)
-        print(min_z, max_z)
-
-        self.ax.set_xlim(1.1 * min_x, 1.1 * max_x)
-        self.ax.set_ylim(1.1 * min_y, 1.1 * max_y)
-        self.ax.set_zlim(1.1 * min_z, 1.1 * max_z)
-
-        svg_io = io.BytesIO()
-        plt.savefig(svg_io, format='svg', transparent=True)
-        return svg_io
-
-    def visualize_xyz(self):
-        """
-        Loops geometry coordinates and add to ax
-        object next instances of Cuboid and visualize
-        """
-        dims = self.input_values['geometry']
-        for dim in dims:
+        for dim in self.input_values:
             cuboid = Cuboid(*tuple(dim.values()))
             cuboid.draw(ax=self.ax)
         svg_io = io.BytesIO()
