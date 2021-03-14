@@ -22,3 +22,5 @@ Input used in below examples:
   "plane": "XYZ"
 }
 ```
+1) XYZ
+![xyz](https://user-images.githubusercontent.com/33575891/111081855-95d49600-8505-11eb-9ab5-7a62a445a7bb.png)
