@@ -22,3 +22,6 @@ Input used in below examples:
   "plane": "XYZ"
 }
 ```
+You can also swich coordinates like XZ -> ZX etc.
+
+Some screenshots from `Postman`:
