@@ -15,6 +15,8 @@ Please follow steps:
 The best way to test endpoint is to use `Postman`.
 You can POST `/projection` with Content-Type `application/json` and coordinates.
 
+You can also switch coordinates like XZ -> ZX etc.
+
 Input used in below examples:
 ```
 {
@@ -22,6 +24,13 @@ Input used in below examples:
   "plane": "XYZ"
 }
 ```
-You can also swich coordinates like XZ -> ZX etc.
 
-Some screenshots from `Postman`:
+1) XYZ
+![xyz](https://user-images.githubusercontent.com/33575891/111081855-95d49600-8505-11eb-9ab5-7a62a445a7bb.png)
+
+2) XY
+![xy](https://user-images.githubusercontent.com/33575891/111081914-d6ccaa80-8505-11eb-9545-00807ab9c831.png)
+
+3) YZ
+![yz](https://user-images.githubusercontent.com/33575891/111081920-e0561280-8505-11eb-9edb-b7a3e578c0f7.png)
+
